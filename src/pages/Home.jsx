@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { SearchBar } from "../components/SearchBar";
 import { MovieCard } from "../components/MovieCard";
 import { SkeletonGrid } from "../components/Loader";
+import { ErrorMessage } from "../components/ErrorMessage";
 import { getTopRated } from "../utils/api";
 import "./Home.css";
 
@@ -11,12 +12,15 @@ export function Home() {
   const [searchType, setSearchType] = useState("movie");
   const [featured, setFeatured] = useState([]);
   const [loadingFeatured, setLoadingFeatured] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
+    useEffect(() => {
     setLoadingFeatured(true);
     setFeatured([]);
+    setError(null);
     getTopRated(searchType)
       .then(setFeatured)
+      .catch((err) => setError(err.message))
       .finally(() => setLoadingFeatured(false));
   }, [searchType]);
 
@@ -88,13 +92,15 @@ export function Home() {
             <span className="home__featured-sub">Sorted by IMDb rating</span>
           </div>
 
-          {loadingFeatured ? (
+                    {loadingFeatured ? (
             <SkeletonGrid count={8} />
+          ) : error ? (
+            <ErrorMessage message={error} />
           ) : (
             <div className="home__cards-grid">
               {featured.map((item, i) => (
                 <div
-                  key={item.imdbID}
+                  key={item.id}
                   style={{ animationDelay: `${i * 0.06}s` }}
                 >
                   <MovieCard movie={item} />

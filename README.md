@@ -1,86 +1,137 @@
-# 🎬 CineMate
+# CineMate
 
-A production-grade Movie & Series recommendation Single Page Application (SPA) built with React and Vite. 
-Features a custom caching layer, debounced API requests, and a modern cinematic UI.
+A movie and TV series discovery app built with React and the OMDb API. Search titles, keep a personal watchlist with a watched/to-watch status, and see a rating-based recommendation.
 
-Live Demo: 
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
+[![React Router](https://img.shields.io/badge/React_Router-7-CA4245?logo=reactrouter&logoColor=white)](https://reactrouter.com/)
+[![Vitest](https://img.shields.io/badge/Vitest-4-6E9F18?logo=vitest&logoColor=white)](https://vitest.dev/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](#license)
 
-## ✨Features
-- Smart search: debounced input (400ms) to prevent unnecessary API calls and rate limiting
-- Performance optimized: custom `localStorage` caching mechanism with a 1-hour TTL (Time-To-Live)
-- Intelligent recommendations: rating-based algorithmic tags (🔥 Hot / 🤔 Maybe / 🚫 Avoid)
-- Resilient UI: skeleton loaders, graceful error handling, and animated empty states
-- Responsive design: mobile-first architecture with a dark cinematic design system
-- Unit tested: core hooks, utils, and components are fully tested
+**Live demo:** <ADAUGĂ AICI LINKUL TĂU DE PE VERCEL>
 
-## 🛠️ Tech Stack
-- Framework: React 18 + Vite
-- Routing: React Router v7
-- Styling: Pure CSS3 (CSS variables, Flexbox/Grid, BEM methodology)
-- Testing: Vitest + React Testing Library + user-event
-- API: OMDb API
+## Table of Contents
 
-## Setup & Installation
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [Available Scripts](#available-scripts)
+- [Testing](#testing)
+- [Project Structure](#project-structure)
+- [Known Limitations](#known-limitations)
+- [License](#license)
 
-### 1. Get your OMDb API Key
-Sign up free at https://www.omdbapi.com/apikey.aspx
+## Features
 
-### 2. Configure environment
+- Debounced search (400ms) across movies and series, with a year filter and sorting by rating or release year
+- Search state (query, filters, sort, pagination) kept in the URL, so results are shareable and work with the browser's back/forward buttons
+- "Load more" pagination on top of OMDb's paginated search results
+- In-flight requests are cancelled via `AbortController` when the query changes, preventing an outdated response from overwriting a newer one
+- Personal watchlist stored in `localStorage`: mark titles as "To watch" or "Watched", filter by movies/series, sort by date added, rating, or release year, and view aggregate stats (saved count, watched count, average rating)
+- Rating-based recommendation tags on cards and detail pages
+- Response caching (1-hour TTL, case-insensitive keys) to reduce redundant API calls, with a distinct error message when OMDb's daily rate limit is reached
+- Skeleton loaders, error states, and an empty-state view for searches with no results
+- Responsive, mobile-first layout
+
+## Tech Stack
+
+| Layer      | Technology                      |
+| ---------- | -------------------------------- |
+| Framework  | React 18 + Vite                  |
+| Routing    | React Router 7                   |
+| Styling    | Plain CSS (custom properties, BEM-style naming) |
+| Testing    | Vitest + React Testing Library   |
+| Data       | [OMDb API](https://www.omdbapi.com/) |
+| Deployment | Vercel                           |
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- A free OMDb API key: https://www.omdbapi.com/apikey.aspx
+
+### Installation
+
 ```bash
+git clone <repo-url>
+cd cinemate
+npm install
 cp .env.example .env
-# Edit .env and add your key:
-# VITE_OMDB_API_KEY=your_key_here
 ```
 
-### 3. Install & run
+### Environment Variables
+
+| Variable            | Required | Notes                                             |
+| -------------------- | :------: | -------------------------------------------------- |
+| `VITE_OMDB_API_KEY`  |   Yes    | OMDb API key. Bundled into the client JS — fine for a free-tier key, not for a sensitive one. |
+
+### Running the app
+
 ```bash
-npm install
 npm run dev
 ```
 
-Open http://localhost:5173
+Open http://localhost:5173.
 
-### Build for production
+## Available Scripts
+
+| Script            | Description                          |
+| ------------------ | ------------------------------------- |
+| `npm run dev`      | Starts the development server         |
+| `npm run build`    | Builds the app for production         |
+| `npm run preview`  | Serves the production build locally   |
+| `npm run test`     | Runs the test suite with Vitest       |
+
+## Testing
+
 ```bash
-npm run build
-npm run preview
-```
-
-## 🧪 Testing
-# Run unit tests
 npm run test
-
-## 🏗️ Architecture overview
-
 ```
+
+Test coverage includes the API/cache layer (cache key normalization, rate-limit handling), the search hook (debounce, pagination, discarding outdated responses), the debounce hook, the watchlist context, and select components. Page-level components (`Watchlist`, `MediaBrowser`) are not yet covered.
+
+## Project Structure
+
+```text
 src/
 ├── components/
-│   ├── Navbar           # Sticky navigation
-│   ├── SearchBar        # Reusable debounced search input
-│   ├── MovieCard        # Card with poster, title, year, rating
-│   ├── MovieGrid        # Responsive grid layout
-│   ├── Loader           # Spinner + Skeleton grid
-│   ├── ErrorMessage     # Error + EmptyState components
-│   └── RecommendationBanner  # Rating-based recommendation
-├── assets/
-│   ├── icon.svg          # Empty state icon
-│   └── logo.svg          # Navbar logo
+│   ├── ErrorMessage        # Error message and empty-state view
+│   ├── Icon                # Shared bookmark/star SVG icons
+│   ├── Loader              # Spinner and skeleton grid
+│   ├── MovieCard            # Poster, rating, recommendation tag or watch-status toggle
+│   ├── MovieGrid              # Responsive grid of MovieCard
+│   ├── Navbar                   # Navigation bar with a live watchlist count
+│   ├── Poster                     # <img> with a local SVG fallback on load error
+│   ├── RecommendationBanner
+│   └── SearchBar
+├── context/
+│   └── WatchlistContext     # Watchlist state, watch status, cross-tab localStorage sync
 ├── hooks/
-│   ├── useDebounce      # Generic debounce hook
-│   ├── useSearch        # Core search logic (shared)
-│   ├── useMovies        # Movies search (uses useSearch)
-│   ├── useSeries        # Series search (uses useSearch)
-│   └── useMovie         # Single movie/series detail
+│   ├── useDebounce
+│   ├── useMovie              # Single movie/series detail fetch
+│   └── useSearch               # Search, pagination, sorting, request cancellation
 ├── pages/
-│   ├── Home             # Landing page with hero + quick search
-│   ├── MediaBrowser     # Shared Movies/Series page (no duplication)
-│   ├── Movies           # Thin wrapper → MediaBrowser
-│   ├── Series           # Thin wrapper → MediaBrowser
-│   └── MovieDetails     # Full detail + recommendation
+│   ├── Home
+│   ├── MediaBrowser            # Shared search/filter/sort/pagination UI for Movies and Series
+│   ├── Movies / Series           # Thin wrappers around MediaBrowser
+│   ├── MovieDetails
+│   └── Watchlist
 ├── utils/
-│   └── api.js           # OMDb fetch + localStorage cache (1hr TTL)
+│   ├── api.js                  # OMDb fetch, response cache, rate-limit handling
+│   ├── normalizeMedia.js         # Maps raw OMDb fields to one internal data model
+│   ├── poster.js
+│   └── recommendation.js           # Rating thresholds shared by the card and the banner
 └── styles/
-    └── globals.css      # Design system, CSS variables, animations
+    └── globals.css
 ```
 
+## Known Limitations
 
+- Each search enriches up to 10 results with a follow-up detail request per title, so one search can use up to 11 API calls. OMDb's free tier allows 1,000 requests/day.
+- No linter or CI pipeline configured yet.
+- The catch-all route redirects to Home instead of showing a dedicated "not found" page.
+
+## License
+
+MIT

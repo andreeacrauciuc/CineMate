@@ -169,6 +169,46 @@
   color: var(--text-primary);
 }
 
+.detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.detail__watchlist-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition:
+    transform var(--transition),
+    background var(--transition),
+    border-color var(--transition),
+    color var(--transition),
+    box-shadow var(--transition);
+}
+
+.detail__watchlist-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-card-hover);
+}
+
+.detail__watchlist-btn.is-active {
+  color: var(--accent);
+  background: var(--accent-dim);
+  border-color: rgba(200, 134, 10, 0.2);
+}
+
 .detail__genres {
   display: flex;
   flex-wrap: wrap;

@@ -1,19 +1,20 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useMovie } from "../hooks/useMovie";
+import { useWatchlist } from "../context/WatchlistContext";
 import { RecommendationBanner } from "../components/RecommendationBanner";
 import { Loader } from "../components/Loader";
 import { ErrorMessage } from "../components/ErrorMessage";
+import { Poster } from "../components/Poster";
+import { BookmarkIcon } from "../components/Icon";
+import { FALLBACK_POSTER } from "../utils/poster";
 import "./MovieDetails.css";
-
-const FALLBACK =
-  "https://via.placeholder.com/400x600/111827/4a5568?text=No+Poster";
 
 function Badge({ children }) {
   return <span className="detail-badge">{children}</span>;
 }
 
 function Stat({ label, value }) {
-  if (!value || value === "N/A") return null;
+  if (!value) return null;
   return (
     <div className="detail-stat">
       <span className="detail-stat__label">{label}</span>
@@ -26,6 +27,7 @@ export function MovieDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { movie, loading, error } = useMovie(id);
+  const { isInWatchlist, toggleWatchlist } = useWatchlist();
 
   if (loading)
     return (
@@ -41,74 +43,65 @@ export function MovieDetails() {
     );
   if (!movie) return null;
 
-  const poster = movie.Poster !== "N/A" ? movie.Poster : FALLBACK;
-  const genres = movie.Genre?.split(", ") || [];
+  const genres = movie.genre?.split(", ") || [];
+  const inWatchlist = isInWatchlist(movie.id);
 
   return (
     <main className="detail page-enter">
-      {/* Blurred poster BG */}
       <div
         className="detail__bg-poster"
-        style={{ backgroundImage: `url(${poster})` }}
+        style={{ backgroundImage: `url("${movie.poster || FALLBACK_POSTER}")` }}
         aria-hidden="true"
       >
         <div className="detail__bg-overlay" />
       </div>
 
       <div className="container">
-        {/* Back button */}
         <button className="detail__back" onClick={() => navigate(-1)}>
-          <svg
-            viewBox="0 0 24 24"
-            width="16"
-            height="16"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M19 12H5M12 5l-7 7 7 7" />
           </svg>
           Back
         </button>
 
         <div className="detail__layout">
-          {/* Poster */}
           <aside className="detail__poster-col">
             <div className="detail__poster-wrap">
-              <img
-                src={poster}
-                alt={movie.Title}
-                className="detail__poster"
-                onError={(e) => {
-                  e.target.src = FALLBACK;
-                }}
-              />
+              <Poster src={movie.poster} alt={movie.title} className="detail__poster" />
             </div>
 
-            {movie.imdbRating && movie.imdbRating !== "N/A" && (
+            {movie.rating && (
               <div className="detail__imdb">
                 <div className="detail__imdb-top">
                   <span className="detail__imdb-star">★</span>
-                  <span className="detail__imdb-score">{movie.imdbRating}</span>
+                  <span className="detail__imdb-score">{movie.rating}</span>
                   <span className="detail__imdb-max">/10</span>
                 </div>
-                {movie.imdbVotes && movie.imdbVotes !== "N/A" && (
-                  <p className="detail__imdb-votes">{movie.imdbVotes} votes</p>
-                )}
+                {movie.votes && <p className="detail__imdb-votes">{movie.votes} votes</p>}
               </div>
             )}
           </aside>
 
           <section className="detail__info">
             <div className="detail__meta">
-              <span className="detail__type">{movie.Type}</span>
-              {movie.Year && <span className="detail__year">{movie.Year}</span>}
-              {movie.Rated && movie.Rated !== "N/A" && (
-                <span className="detail__rated">{movie.Rated}</span>
-              )}
+              <span className="detail__type">{movie.type}</span>
+              {movie.year && <span className="detail__year">{movie.year}</span>}
+              {movie.rated && <span className="detail__rated">{movie.rated}</span>}
             </div>
 
-            <h1 className="detail__title">{movie.Title}</h1>
+            <h1 className="detail__title">{movie.title}</h1>
+
+            <div className="detail__actions">
+              <button
+                type="button"
+                className={`detail__watchlist-btn ${inWatchlist ? "is-active" : ""}`}
+                onClick={() => toggleWatchlist(movie)}
+                aria-pressed={inWatchlist}
+              >
+                <BookmarkIcon filled={inWatchlist} />
+                {inWatchlist ? "In Watchlist" : "Add to Watchlist"}
+              </button>
+            </div>
 
             {genres.length > 0 && (
               <div className="detail__genres">
@@ -118,38 +111,27 @@ export function MovieDetails() {
               </div>
             )}
 
-            {movie.Plot && movie.Plot !== "N/A" && (
-              <p className="detail__plot">{movie.Plot}</p>
-            )}
+            {movie.plot && <p className="detail__plot">{movie.plot}</p>}
 
-            <RecommendationBanner imdbRating={movie.imdbRating} />
+            <RecommendationBanner rating={movie.rating} type={movie.type} />
 
             <div className="detail__stats">
-              <Stat label="Director" value={movie.Director} />
-              <Stat label="Cast" value={movie.Actors} />
-              <Stat label="Runtime" value={movie.Runtime} />
-              <Stat label="Language" value={movie.Language} />
-              <Stat label="Country" value={movie.Country} />
-              <Stat label="Released" value={movie.Released} />
-              {movie.totalSeasons && (
-                <Stat label="Seasons" value={movie.totalSeasons} />
-              )}
-              {movie.BoxOffice && movie.BoxOffice !== "N/A" && (
-                <Stat label="Box Office" value={movie.BoxOffice} />
-              )}
+              <Stat label="Director" value={movie.director} />
+              <Stat label="Cast" value={movie.actors} />
+              <Stat label="Runtime" value={movie.runtime} />
+              <Stat label="Language" value={movie.language} />
+              <Stat label="Country" value={movie.country} />
+              <Stat label="Released" value={movie.released} />
+              {movie.totalSeasons && <Stat label="Seasons" value={movie.totalSeasons} />}
+              {movie.boxOffice && <Stat label="Box Office" value={movie.boxOffice} />}
             </div>
 
-            {movie.Awards && movie.Awards !== "N/A" && (
+            {movie.awards && (
               <div className="detail__awards">
-                <svg
-                  viewBox="0 0 24 24"
-                  width="16"
-                  height="16"
-                  fill="currentColor"
-                >
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                 </svg>
-                {movie.Awards}
+                {movie.awards}
               </div>
             )}
           </section>

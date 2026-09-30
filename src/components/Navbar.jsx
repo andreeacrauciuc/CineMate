@@ -1,9 +1,11 @@
 import { Link, useLocation } from "react-router-dom";
-import logo from "../../assets/logo.png";
+import logo from "../assets/logo.png";
+import { useWatchlist } from "../context/WatchlistContext";
 import "./Navbar.css";
 
 export function Navbar() {
   const { pathname } = useLocation();
+  const { watchlist } = useWatchlist();
 
   return (
     <nav className="navbar">
@@ -42,6 +44,17 @@ export function Navbar() {
               className={`navbar__link ${pathname === "/series" ? "active" : ""}`}
             >
               Series
+            </Link>
+          </li>
+          <li>
+            <Link
+              to="/watchlist"
+              className={`navbar__link navbar__link--watchlist ${pathname === "/watchlist" ? "active" : ""}`}
+            >
+              Watchlist
+              {watchlist.length > 0 && (
+                <span className="navbar__badge">{watchlist.length}</span>
+              )}
             </Link>
           </li>
         </ul>

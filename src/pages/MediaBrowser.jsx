@@ -1,26 +1,32 @@
-import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useSearch } from "../hooks/useSearch";
 import { SearchBar } from "../components/SearchBar";
 import { MovieGrid } from "../components/MovieGrid";
 import { SkeletonGrid } from "../components/Loader";
 import { ErrorMessage, EmptyState } from "../components/ErrorMessage";
 import "./MediaBrowser.css";
 
-export function MediaBrowser({ useHook, type, label, placeholder }) {
+export function MediaBrowser({ type, label, placeholder }) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [query, setQuery] = useState(searchParams.get("q") || "");
+  const query = searchParams.get("q") ?? "";
+  const year = searchParams.get("y") ?? "";
+  const sort = searchParams.get("sort") ?? "rating";
 
-  const { results, loading, error } = useHook(query);
+  const { results, loading, loadingMore, error, loadMore, hasMore, totalResults } =
+    useSearch(query, type, { year, sort });
 
-  useEffect(() => {
-    const q = searchParams.get("q") || "";
-    setQuery(q);
-  }, []); // eslint-disable-line
+  const updateParams = (patch) => {
+    const next = new URLSearchParams(searchParams);
+    Object.entries(patch).forEach(([key, value]) => {
+      if (value) next.set(key, value);
+      else next.delete(key);
+    });
+    setSearchParams(next);
+  };
 
-  useEffect(() => {
-    if (query) setSearchParams({ q: query }, { replace: true });
-    else setSearchParams({}, { replace: true });
-  }, [query, setSearchParams]);
+  const handleSearch = (q) => updateParams({ q });
+  const handleYearChange = (e) => updateParams({ y: e.target.value.trim() });
+  const handleSortChange = (e) => updateParams({ sort: e.target.value });
 
   return (
     <main className="browser page-enter">
@@ -29,40 +35,58 @@ export function MediaBrowser({ useHook, type, label, placeholder }) {
           <div className="browser__heading">
             <h1 className="browser__title">{label}</h1>
             {results.length > 0 && query && (
-              <>
-                <span className="browser__count">
-                  {results.length} results for "{query}"
-                </span>
-                <span className="browser__sort-label">
-                  <svg
-                    viewBox="0 0 24 24"
-                    width="12"
-                    height="12"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                  >
-                    <path d="M3 6h18M7 12h10M11 18h2" />
-                  </svg>
-                  Sorted by highest IMDb rating
-                </span>
-              </>
+              <span className="browser__count">
+                {results.length} of {totalResults} results for "{query}"
+              </span>
             )}
           </div>
           <div className="browser__search-wrap">
-            <SearchBar
-              initialValue={query}
-              onSearch={setQuery}
-              placeholder={placeholder}
-            />
+            <SearchBar initialValue={query} onSearch={handleSearch} placeholder={placeholder} />
           </div>
         </div>
+
+        {query && (
+          <div className="browser__filters">
+            <label className="browser__filter">
+              Year
+              <input
+                type="number"
+                inputMode="numeric"
+                placeholder="e.g. 2010"
+                defaultValue={year}
+                onBlur={handleYearChange}
+                onKeyDown={(e) => e.key === "Enter" && handleYearChange(e)}
+                className="browser__year-input"
+              />
+            </label>
+
+            <label className="browser__filter">
+              Sort by
+              <select value={sort} onChange={handleSortChange} className="browser__sort-select">
+                <option value="rating">Highest rating</option>
+                <option value="year">Newest first</option>
+              </select>
+            </label>
+          </div>
+        )}
 
         <div className="browser__results">
           {loading && <SkeletonGrid count={10} />}
           {!loading && error && <ErrorMessage message={error} />}
           {!loading && !error && results.length > 0 && (
-            <MovieGrid items={results} />
+            <>
+              <MovieGrid items={results} />
+              {hasMore && (
+                <button
+                  type="button"
+                  className="browser__load-more"
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                >
+                  {loadingMore ? "Loading…" : "Load more"}
+                </button>
+              )}
+            </>
           )}
           {!loading && !error && results.length === 0 && (
             <EmptyState query={query} type={label.toLowerCase()} />

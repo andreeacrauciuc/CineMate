@@ -1,4 +1,4 @@
-import emptyIcon from "../../assets/icon.svg";
+import emptyIcon from "../assets/icon.svg";
 import "./ErrorMessage.css";
 
 export function ErrorMessage({ message }) {

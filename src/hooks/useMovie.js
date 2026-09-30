@@ -3,16 +3,22 @@ import { getMediaById } from "../utils/api";
 
 export function useMovie(id) {
   const [movie, setMovie] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!id) return;
-    let cancelled = false;
+    if (!id) {
+      setMovie(null);
+      setLoading(false);
+      return;
+    }
 
-    const fetch = async () => {
-      setLoading(true);
-      setError(null);
+    let cancelled = false;
+    setMovie(null);
+    setLoading(true);
+    setError(null);
+
+    const loadMovie = async () => {
       try {
         const data = await getMediaById(id);
         if (!cancelled) setMovie(data);
@@ -23,7 +29,7 @@ export function useMovie(id) {
       }
     };
 
-    fetch();
+    loadMovie();
     return () => {
       cancelled = true;
     };
