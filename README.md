@@ -8,7 +8,7 @@ A movie and TV series discovery app built with React and the OMDb API. Search ti
 [![Vitest](https://img.shields.io/badge/Vitest-4-6E9F18?logo=vitest&logoColor=white)](https://vitest.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](#license)
 
-**Live demo:** <ADAUGĂ AICI LINKUL TĂU DE PE VERCEL>
+**Live demo:** <https://cinemate-ashy.vercel.app/>
 
 ## Table of Contents
 
